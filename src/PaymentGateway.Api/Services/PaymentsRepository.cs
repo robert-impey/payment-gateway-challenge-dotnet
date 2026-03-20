@@ -11,8 +11,11 @@ public class PaymentsRepository
         Payments.Add(payment);
     }
 
-    public PostPaymentResponse? Get(Guid id)
+    // I made this nullable as there may be no payment with that id.
+    public Task<PostPaymentResponse?> Get(Guid id)
     {
-        return Payments.FirstOrDefault(p => p.Id == id);
+        // With a real system, this code would most likely have
+        // an "await" in it, so I would not need the Task.FromResult.
+        return Task.FromResult(Payments.FirstOrDefault(p => p.Id == id));
     }
 }
