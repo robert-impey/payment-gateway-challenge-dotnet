@@ -1,0 +1,28 @@
+My Approach
+
+The payment request needs to validate the request from the merchant before
+calling the acquiring bank.
+
+The gateway will return "Rejected" if the request is malformed.
+
+If the request is valid, the gateway will use client to post the request to JSON message
+to the acquiring bank.
+
+The response from the acquiring bank will be returned to the merchant.
+The requirements doc says that "payments that were sucessfully sent to the acquiring bank 
+must include the following fields ... Status	Must be one of the following values Authorized, Declined"
+
+The acquiring bank may return 503 if the service is unavailable. In this case, for this phase, I will
+return "Rejected" to the merchant.
+In the future, we can implement retry logic to handle this case, perhaps using a library like Polly 
+to handle transient faults.
+
+If the acquiring bank returns a response with a 200 status code, we will store the transaction details in the repository, 
+including the status of the transaction (Authorized or Declined).
+Only the last 4 digits of the card number will be stored for security reasons.
+
+The gateway will return the acquiring bank's response to the merchant, including 
+    - the last 4 digits of the card number 
+    - the status of the transaction.
+
+I've used attributes on the DTOs to enforce the lengths of the credit card number.

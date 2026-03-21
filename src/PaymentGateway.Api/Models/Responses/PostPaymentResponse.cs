@@ -1,10 +1,14 @@
-﻿namespace PaymentGateway.Api.Models.Responses;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace PaymentGateway.Api.Models.Responses;
 
 public record PostPaymentResponse
 {
     public required Guid Id { get; init; }
     public required PaymentStatus Status { get; init; }
-    public required int CardNumberLastFour { get; init; }
+
+    [MinLength(4), MaxLength(4)]
+    public required IReadOnlyList<int> CardNumberLastFour { get; init; }
     public required int ExpiryMonth { get; init; }
     public required int ExpiryYear { get; init; }
     public required string Currency { get; init; }
