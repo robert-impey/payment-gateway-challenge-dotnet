@@ -15,7 +15,7 @@ public class PaymentsRepository
     public Task<PostPaymentResponse?> Get(Guid id)
     {
         // With a real system, this code would most likely have
-        // an "await" in it, so I would not need the Task.FromResult.
+        // an "await" in it and be properly async, so I would not need the Task.FromResult.
         return Task.FromResult(Payments.FirstOrDefault(p => p.Id == id));
     }
 }
