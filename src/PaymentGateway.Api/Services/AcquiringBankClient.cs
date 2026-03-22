@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Json;
-using PaymentGateway.Api.Enums;
+﻿using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 
@@ -31,18 +30,9 @@ public class AcquiringBankClient(HttpClient httpClient)
 
             if (result is null)
             {
-                return new PostPaymentResponse
-                {
-                    Id = Guid.Empty,
-                    Status = PaymentStatus.Rejected,
-                    CardNumberLastFour = request.CardNumber[^4..],
-                    ExpiryMonth = request.ExpiryMonth,
-                    ExpiryYear = request.ExpiryYear,
-                    Currency = request.Currency,
-                    Amount = request.Amount
-                };
+                return MakeRejectedResponse(request);
             }
-            
+
             var redactedResponse = new PostPaymentResponse
             {
                 Id = result.Id,
@@ -53,13 +43,29 @@ public class AcquiringBankClient(HttpClient httpClient)
                 Currency = request.Currency,
                 Amount = request.Amount
             };
-            
+
             return redactedResponse;
         }
-        catch (HttpRequestException ex)
+        catch (Exception)
         {
-            // Handle HTTP errors (including service unavailable, timeouts, etc.)
-            throw new InvalidOperationException("Failed to process payment with acquiring bank", ex);
+            // In a production system, we would
+            //  - Log the exception
+            //  - Return an HTTP error code
+            return MakeRejectedResponse(request);
         }
+    }
+
+    private static PostPaymentResponse MakeRejectedResponse(PostPaymentRequest request)
+    {
+        return new PostPaymentResponse
+        {
+            Id = Guid.Empty,
+            Status = PaymentStatus.Rejected,
+            CardNumberLastFour = request.CardNumber[^4..],
+            ExpiryMonth = request.ExpiryMonth,
+            ExpiryYear = request.ExpiryYear,
+            Currency = request.Currency,
+            Amount = request.Amount
+        };
     }
 }
