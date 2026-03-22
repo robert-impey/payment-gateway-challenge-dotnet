@@ -61,8 +61,10 @@ public class PaymentsControllerTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostAndRetrieveAPayment()
+    [Theory] 
+    [InlineData("0123456789012341", true)] // Triggers accepted from the bank 
+    [InlineData("0123456789012342", false)] // Triggers declined from the bank 
+    public async Task PostAndRetrieveAPayment(string cardNumber, bool isAccepted)
     {
         var client = _webApplicationFactory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => ((ServiceCollection)services)
@@ -74,7 +76,7 @@ public class PaymentsControllerTests
         // Act
         var postRequest = new PostPaymentRequest
         {
-            CardNumber = "1234567890123456",
+            CardNumber = cardNumber,
             ExpiryMonth = currentNow.Month,
             ExpiryYear = currentNow.Year + 3,
             Currency = "USD",
@@ -94,10 +96,45 @@ public class PaymentsControllerTests
 
         var getResponse = await client.GetAsync($"/api/Payments/{paymentId}", TestContext.Current.CancellationToken);
 
-        await ValidatePaymentResponse(getResponse);
+        await ValidatePaymentResponse(getResponse, isAccepted);
     }
 
-    private async Task ValidatePaymentResponse(HttpResponseMessage? response)
+    [Theory]
+    [InlineData("0123456789012")] // Too short
+    [InlineData("01234567890123456789")] // Too long
+    [InlineData("0123456789012340")] // Triggers 503 from the bank
+    public async Task PostPaymentToBeRejected(string cardNumber)
+    {
+       var client = _webApplicationFactory.WithWebHostBuilder(builder =>
+                    builder.ConfigureServices(services => ((ServiceCollection)services)
+                        .AddSingleton(new PaymentsRepository()))) // Providing an empty repository
+                .CreateClient();
+
+            var currentNow = DateTime.UtcNow;
+
+            // Act
+            var postRequest = new PostPaymentRequest
+            {
+                CardNumber = cardNumber,
+                ExpiryMonth = currentNow.Month,
+                ExpiryYear = currentNow.Year + 3,
+                Currency = "USD",
+                Amount = 100,
+                Cvv = "123"
+            };
+
+            var postResponse = await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode);
+
+            var postedPayment = await postResponse.Content.ReadFromJsonAsync<PostPaymentResponse>(
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.NotNull(postedPayment);
+            postedPayment.Status.ShouldBe(PaymentStatus.Rejected);
+    }
+    
+    private async Task ValidatePaymentResponse(HttpResponseMessage? response, bool isAccepted = true)
     {
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -110,5 +147,7 @@ public class PaymentsControllerTests
         // not adhering to this would be a serious compliance risk, 
         // I am checking this explicitly.
         paymentResponse.CardNumberLastFour.Value.Length.ShouldBe(4);
+
+        paymentResponse.Status.ShouldBe(isAccepted ? PaymentStatus.Authorized : PaymentStatus.Declined);
     }
 }
