@@ -16,7 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<PaymentsRepository>();
-builder.Services.AddSingleton<AcquiringBankClient>();
+builder.Services.AddHttpClient<AcquiringBankClient>();
 builder.Services.AddSingleton<PaymentsValidator>();
 
 var app = builder.Build();

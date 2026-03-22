@@ -1,4 +1,5 @@
-﻿using PaymentGateway.Api.Enums;
+﻿using System.Net.Http.Json;
+using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 
@@ -10,21 +11,55 @@ namespace PaymentGateway.Api.Services;
 // abstract class. This would allow mocks to be used in tests.
 // There might also be different implementations for different banks, or versions of
 // the bank's API.
-public class AcquiringBankClient
+public class AcquiringBankClient(HttpClient httpClient)
 {
-    public Task<PostPaymentResponse> MakePayment(PostPaymentRequest request, CancellationToken token)
+    public async Task<PostPaymentResponse> MakePayment(PostPaymentRequest request, CancellationToken token)
     {
-        var response = new PostPaymentResponse
+        try
         {
-            Id = Guid.NewGuid(),
-            Status = PaymentStatus.Authorized,
-            CardNumberLastFour = request.CardNumber[^4..],
-            ExpiryMonth = request.ExpiryMonth,
-            ExpiryYear = request.ExpiryYear,
-            Currency = request.Currency,
-            Amount = request.Amount
-        };
+            // In a production system, the bank's location and
+            // security credentials would be stored in configuration
+            // and secret stores.
+            var response = await httpClient.PostAsJsonAsync(
+                "http://localhost:8080/payments",
+                request,
+                token);
 
-        return Task.FromResult(response);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: token);
+
+            if (result is null)
+            {
+                return new PostPaymentResponse
+                {
+                    Id = Guid.Empty,
+                    Status = PaymentStatus.Rejected,
+                    CardNumberLastFour = request.CardNumber[^4..],
+                    ExpiryMonth = request.ExpiryMonth,
+                    ExpiryYear = request.ExpiryYear,
+                    Currency = request.Currency,
+                    Amount = request.Amount
+                };
+            }
+            
+            var redactedResponse = new PostPaymentResponse
+            {
+                Id = result.Id,
+                Status = result.Status,
+                CardNumberLastFour = request.CardNumber[^4..],
+                ExpiryMonth = request.ExpiryMonth,
+                ExpiryYear = request.ExpiryYear,
+                Currency = request.Currency,
+                Amount = request.Amount
+            };
+            
+            return redactedResponse;
+        }
+        catch (HttpRequestException ex)
+        {
+            // Handle HTTP errors (including service unavailable, timeouts, etc.)
+            throw new InvalidOperationException("Failed to process payment with acquiring bank", ex);
+        }
     }
 }

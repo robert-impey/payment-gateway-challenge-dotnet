@@ -50,7 +50,8 @@ public class PaymentsControllerTests
 
         var client = _webApplicationFactory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => ((ServiceCollection)services)
-                .AddSingleton(paymentsRepository)))
+                .AddSingleton(paymentsRepository)
+                .AddHttpClient<AcquiringBankClient>()))
             .CreateClient();
 
         // Act
@@ -72,14 +73,15 @@ public class PaymentsControllerTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    [Theory] 
+    [Theory]
     [InlineData("0123456789012341", true)] // Triggers accepted from the bank 
     [InlineData("0123456789012342", false)] // Triggers declined from the bank 
     public async Task PostAndRetrieveAPayment(string cardNumber, bool isAccepted)
     {
         var client = _webApplicationFactory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => ((ServiceCollection)services)
-                .AddSingleton(new PaymentsRepository()))) // Providing an empty repository
+                .AddSingleton(new PaymentsRepository())
+                .AddHttpClient<AcquiringBankClient>()))
             .CreateClient();
 
         var currentNow = DateTime.UtcNow;
@@ -95,7 +97,8 @@ public class PaymentsControllerTests
             Cvv = "123"
         };
 
-        var postResponse = await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
+        var postResponse =
+            await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode);
 
@@ -116,41 +119,45 @@ public class PaymentsControllerTests
     [InlineData("0123456789012340")] // Triggers 503 from the bank
     public async Task PostPaymentToBeRejected(string cardNumber)
     {
-       var client = _webApplicationFactory.WithWebHostBuilder(builder =>
-                    builder.ConfigureServices(services => ((ServiceCollection)services)
-                        .AddSingleton(new PaymentsRepository()))) // Providing an empty repository
-                .CreateClient();
+        var client = _webApplicationFactory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services => ((ServiceCollection)services)
+                .AddSingleton(new PaymentsRepository())
+                .AddHttpClient<AcquiringBankClient>()))
+            .CreateClient();
 
-            var currentNow = DateTime.UtcNow;
+        var currentNow = DateTime.UtcNow;
 
-            // Act
-            var postRequest = new PostPaymentRequest
-            {
-                CardNumber = cardNumber,
-                ExpiryMonth = currentNow.Month,
-                ExpiryYear = currentNow.Year + 3,
-                Currency = "USD",
-                Amount = 100,
-                Cvv = "123"
-            };
+        // Act
+        var postRequest = new PostPaymentRequest
+        {
+            CardNumber = cardNumber,
+            ExpiryMonth = currentNow.Month,
+            ExpiryYear = currentNow.Year + 3,
+            Currency = "USD",
+            Amount = 100,
+            Cvv = "123"
+        };
 
-            var postResponse = await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
+        var postResponse =
+            await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
 
-            Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode);
 
-            var postedPayment = await postResponse.Content.ReadFromJsonAsync<PostPaymentResponse>(
-                cancellationToken: TestContext.Current.CancellationToken);
+        var postedPayment = await postResponse.Content.ReadFromJsonAsync<PostPaymentResponse>(
+            cancellationToken: TestContext.Current.CancellationToken);
 
-            Assert.NotNull(postedPayment);
-            postedPayment.Status.ShouldBe(PaymentStatus.Rejected);
+        Assert.NotNull(postedPayment);
+        postedPayment.Status.ShouldBe(PaymentStatus.Rejected);
     }
-    
+
     private async Task ValidatePaymentResponse(HttpResponseMessage? response, bool isAccepted = true)
     {
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: TestContext.Current.CancellationToken);
+        var paymentResponse =
+            await response.Content.ReadFromJsonAsync<PostPaymentResponse>(
+                cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.NotNull(paymentResponse);
 
