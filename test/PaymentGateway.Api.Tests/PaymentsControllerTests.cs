@@ -9,6 +9,8 @@ using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
 
+using Shouldly;
+
 namespace PaymentGateway.Api.Tests;
 
 public class PaymentsControllerTests
@@ -40,12 +42,17 @@ public class PaymentsControllerTests
             .CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/{payment.Id}");
-        var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
+        var response = await client.GetAsync($"/api/Payments/{payment.Id}", TestContext.Current.CancellationToken);
+        var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(paymentResponse);
+
+        // This should not be possible, but as the spec says that
+        // not adhering to this would be a serious compliance risk, 
+        // I am checking this explicitly.
+        payment.CardNumberLastFour.Value.Length.ShouldBe(4);
     }
 
     [Fact]
@@ -56,7 +63,7 @@ public class PaymentsControllerTests
         var client = webApplicationFactory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/{Guid.NewGuid()}");
+        var response = await client.GetAsync($"/api/Payments/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
