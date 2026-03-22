@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 using PaymentGateway.Api.Enums;
 
@@ -13,6 +14,7 @@ public record GetPaymentResponse
     // are not validated by the framework, but I have added
     // them here for clarity and to potentially help serializers.
     [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required PaymentStatus Status { get; init; }
 
     [Required]
