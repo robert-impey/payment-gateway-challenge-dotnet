@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 using PaymentGateway.Api.Enums;
 
@@ -10,6 +11,7 @@ public record PostPaymentResponse
     public required Guid Id { get; init; }
 
     [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required PaymentStatus Status { get; init; }
 
     [Required]
