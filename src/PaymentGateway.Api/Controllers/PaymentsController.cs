@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
+using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
@@ -18,6 +19,24 @@ public class PaymentsController(
     [HttpPost]
     public async Task<ActionResult<PostPaymentResponse>> PostPaymentAsync(PostPaymentRequest request, CancellationToken token)
     {
+        if (!ModelState.IsValid)
+        {
+            // In line with the spec, I am returning a rejected payment.
+            // The null suppressions and the default values are a bit of 
+            // a smell.
+            // A more idiomatic response would be to return a 400 (Bad Request).
+            return new PostPaymentResponse
+            {
+                Status = PaymentStatus.Rejected,
+                Id = Guid.Empty,
+                CardNumberLastFour = null!,
+                ExpiryMonth = 0,
+                ExpiryYear = 0,
+                Currency = null!,
+                Amount = 0
+            };
+        }
+
         if (!paymentsValidator.Validate(request))
         {
             return BadRequest("Invalid payment request.");

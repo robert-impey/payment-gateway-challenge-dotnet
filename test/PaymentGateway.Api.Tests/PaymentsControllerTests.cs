@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using PaymentGateway.Api.Controllers;
 using PaymentGateway.Api.Enums;
+using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
@@ -23,6 +24,16 @@ public class PaymentsControllerTests
     public async Task RetrievesAPaymentSuccessfully()
     {
         // Arrange
+        var lastFour = _random.Next(0, 9999);
+
+        var lastFourObj = lastFour switch
+        {
+            < 10 => new CardLast4($"000{lastFour}"),
+            < 100 => new CardLast4($"00{lastFour}"),
+            < 1000 => new CardLast4($"0{lastFour}"),
+            _ => new CardLast4(lastFour.ToString())
+        };
+
         var payment = new PostPaymentResponse
         {
             Id = Guid.NewGuid(),
@@ -30,7 +41,7 @@ public class PaymentsControllerTests
             ExpiryYear = _random.Next(2023, 2030),
             ExpiryMonth = _random.Next(1, 12),
             Amount = _random.Next(1, 10000),
-            CardNumberLastFour = new Models.CardLast4(_random.Next(0, 9999).ToString()),
+            CardNumberLastFour = lastFourObj,
             Currency = "GBP"
         };
 
