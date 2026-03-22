@@ -25,6 +25,6 @@ public record CardLast4
 
     public static implicit operator CardLast4(string v)
     {
-        throw new NotImplementedException();
+        return new CardLast4(v);
     }
 }

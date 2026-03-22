@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using PaymentGateway.Api.Controllers;
 using PaymentGateway.Api.Enums;
+using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
 
@@ -16,6 +17,7 @@ namespace PaymentGateway.Api.Tests;
 public class PaymentsControllerTests
 {
     private readonly Random _random = new();
+    private readonly WebApplicationFactory<PaymentsController> _webApplicationFactory = new();
 
     [Fact]
     public async Task RetrievesAPaymentSuccessfully()
@@ -35,37 +37,78 @@ public class PaymentsControllerTests
         var paymentsRepository = new PaymentsRepository();
         paymentsRepository.Add(payment, TestContext.Current.CancellationToken);
 
-        var webApplicationFactory = new WebApplicationFactory<PaymentsController>();
-        var client = webApplicationFactory.WithWebHostBuilder(builder =>
+        var client = _webApplicationFactory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => ((ServiceCollection)services)
                 .AddSingleton(paymentsRepository)))
             .CreateClient();
 
         // Act
         var response = await client.GetAsync($"/api/Payments/{payment.Id}", TestContext.Current.CancellationToken);
-        var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(paymentResponse);
-
-        // This should not be possible, but as the spec says that
-        // not adhering to this would be a serious compliance risk, 
-        // I am checking this explicitly.
-        payment.CardNumberLastFour.Value.Length.ShouldBe(4);
+        await ValidatePaymentResponse(response);
     }
 
     [Fact]
     public async Task Returns404IfPaymentNotFound()
     {
         // Arrange
-        var webApplicationFactory = new WebApplicationFactory<PaymentsController>();
-        var client = webApplicationFactory.CreateClient();
+        var client = _webApplicationFactory.CreateClient();
 
         // Act
         var response = await client.GetAsync($"/api/Payments/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostAndRetrieveAPayment()
+    {
+        var client = _webApplicationFactory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services => ((ServiceCollection)services)
+                .AddSingleton(new PaymentsRepository()))) // Providing an empty repository
+            .CreateClient();
+
+        var currentNow = DateTime.UtcNow;
+
+        // Act
+        var postRequest = new PostPaymentRequest
+        {
+            CardNumber = "1234567890123456",
+            ExpiryMonth = currentNow.Month,
+            ExpiryYear = currentNow.Year + 3,
+            Currency = "USD",
+            Amount = 100,
+            Cvv = "123"
+        };
+
+        var postResponse = await client.PostAsJsonAsync($"/api/Payments/", postRequest, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode);
+
+        var postedPayment = await postResponse.Content.ReadFromJsonAsync<PostPaymentResponse>(
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.NotNull(postedPayment);
+        var paymentId = postedPayment.Id;
+
+        var getResponse = await client.GetAsync($"/api/Payments/{paymentId}", TestContext.Current.CancellationToken);
+
+        await ValidatePaymentResponse(getResponse);
+    }
+
+    private async Task ValidatePaymentResponse(HttpResponseMessage? response)
+    {
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.NotNull(paymentResponse);
+
+        // This should not be possible, but as the spec says that
+        // not adhering to this would be a serious compliance risk, 
+        // I am checking this explicitly.
+        paymentResponse.CardNumberLastFour.Value.Length.ShouldBe(4);
     }
 }
