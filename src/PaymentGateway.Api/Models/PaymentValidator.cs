@@ -1,6 +1,6 @@
 ﻿using PaymentGateway.Api.Models.Requests;
 
-namespace PaymentGateway.Api.Services;
+namespace PaymentGateway.Api.Models;
 
 /// <summary>
 /// Where fields can be validated individually, I have used attributes.

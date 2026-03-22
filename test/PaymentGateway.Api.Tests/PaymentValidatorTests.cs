@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-using PaymentGateway.Api.Services;
+using PaymentGateway.Api.Models;
 
 using Shouldly;
 
