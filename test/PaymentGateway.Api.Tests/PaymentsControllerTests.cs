@@ -18,11 +18,6 @@ public class PaymentsControllerTests
     public async Task RetrievesAPaymentSuccessfully()
     {
         // Arrange
-        var lastFourDigits = new int[4];
-        for (var i = 0; i < lastFourDigits.Length; i++)
-        {
-            lastFourDigits[i] = _random.Next(0, 9);
-        }
         var payment = new PostPaymentResponse
         {
             Id = Guid.NewGuid(),
@@ -30,7 +25,7 @@ public class PaymentsControllerTests
             ExpiryYear = _random.Next(2023, 2030),
             ExpiryMonth = _random.Next(1, 12),
             Amount = _random.Next(1, 10000),
-            CardNumberLastFour = lastFourDigits,
+            CardNumberLastFour = new Models.CardLast4(_random.Next(0, 9999).ToString()),
             Currency = "GBP"
         };
 

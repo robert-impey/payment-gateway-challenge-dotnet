@@ -4,12 +4,21 @@ namespace PaymentGateway.Api.Models.Responses;
 
 public record GetPaymentResponse
 {
-    public required Guid Id { get; init; }
+    public Guid? Id { get; init; }
+
+    // Note that data annotations for outgoing DTO fields
+    // are not validated by the framework, but I have added
+    // them here for clarity and to potentially help serializers.
+    [Required]
     public required PaymentStatus Status { get; init; }
-    [MinLength(4), MaxLength(4)]
-    public required IReadOnlyList<int> CardNumberLastFour { get; init; }
-    public required int ExpiryMonth { get; init; }
-    public required int ExpiryYear { get; init; }
-    public required string Currency { get; init; }
-    public required int Amount { get; init; }
+
+    public CardLast4? CardNumberLastFour { get; init; }
+
+    public int? ExpiryMonth { get; init; }
+
+    public int? ExpiryYear { get; init; }
+
+    public string? Currency { get; init; }
+
+    public int? Amount { get; init; }
 }
