@@ -14,7 +14,7 @@ public record PostPaymentRequest
     [RegularExpression(AllDigitsRegex)]
     public required string CardNumber { get; init; }
 
-    [Required]
+    [Required, Range(1, 12)]
     public required int ExpiryMonth { get; init; }
 
     [Required]

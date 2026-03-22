@@ -14,6 +14,16 @@ public class AcquiringBankClient(HttpClient httpClient)
 {
     public async Task<PostPaymentResponse> MakePayment(PostPaymentRequest request, CancellationToken token)
     {
+        var bankRequest = new BankRequest
+        {
+            CardNumber = request.CardNumber,
+            ExpiryMonth = request.ExpiryMonth,
+            ExpiryYear = request.ExpiryYear,
+            Currency = request.Currency,
+            Amount = request.Amount,
+            Cvv = request.Cvv
+        };
+        
         try
         {
             // In a production system, the bank's location and
@@ -21,30 +31,58 @@ public class AcquiringBankClient(HttpClient httpClient)
             // and secret stores.
             var response = await httpClient.PostAsJsonAsync(
                 "http://localhost:8080/payments",
-                request,
+                bankRequest,
                 token);
 
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(cancellationToken: token);
+            var bankResponse = await response.Content.ReadFromJsonAsync<BankResponse>(cancellationToken: token);
 
-            if (result is null)
+            if (bankResponse is null)
             {
                 return MakeRejectedResponse(request);
             }
 
-            var redactedResponse = new PostPaymentResponse
+            if (string.IsNullOrWhiteSpace(bankResponse.AuthorizationCode))
             {
-                Id = result.Id,
-                Status = result.Status,
-                CardNumberLastFour = request.CardNumber[^4..],
-                ExpiryMonth = request.ExpiryMonth,
-                ExpiryYear = request.ExpiryYear,
-                Currency = request.Currency,
-                Amount = request.Amount
-            };
+                if (bankResponse.Authorized)
+                {
+                    // If the bank said that the payment was authorized,
+                    // but the authorization code is missing, then we will 
+                    // count this as a rejection.
+                    return MakeRejectedResponse(request);
+                }
 
-            return redactedResponse;
+                return new PostPaymentResponse
+                {
+                    Id = Guid.Empty,
+                    Status = PaymentStatus.Declined,
+                    CardNumberLastFour = request.CardNumber[^4..],
+                    ExpiryMonth = request.ExpiryMonth,
+                    ExpiryYear = request.ExpiryYear,
+                    Currency = request.Currency,
+                    Amount = request.Amount
+                };
+            }
+
+            if (Guid.TryParse(bankResponse.AuthorizationCode, out var authCode))
+            {
+                if (bankResponse.Authorized)
+                {
+                    return new PostPaymentResponse
+                    {
+                        Id = authCode,
+                        Status = PaymentStatus.Authorized,
+                        CardNumberLastFour = request.CardNumber[^4..],
+                        ExpiryMonth = request.ExpiryMonth,
+                        ExpiryYear = request.ExpiryYear,
+                        Currency = request.Currency,
+                        Amount = request.Amount
+                    };
+                }
+            }
+
+            return MakeRejectedResponse(request);
         }
         catch (Exception)
         {
