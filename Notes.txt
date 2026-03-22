@@ -3,7 +3,14 @@ My Approach
 The payment request needs to validate the request from the merchant before
 calling the acquiring bank.
 
-The gateway will return "Rejected" if the request is malformed.
+The spec states that gateway will return "Rejected" if the request is malformed.
+I've used the framework's validation features, which ordinarily means that the controller
+would return "BadRequest" for malformed requests before the method is even invoked.
+In order to stick strictly to the spec, I could disabled the filtering in the Program.cs file in order
+to enter the controller's PostPayment method, validate manually and return the enum value.
+However, this not idiomatic and potentially error prone, so I've stuck to HTTP codes and deviated from the spec.
+In a real world scenario, I would discuss this requirement with the team to confirm current
+expectations from existing merchants.
 
 If the request is valid, the gateway will use client to post the request to JSON message
 to the acquiring bank.
@@ -26,3 +33,5 @@ The gateway will return the acquiring bank's response to the merchant, including
     - the status of the transaction.
 
 I've used attributes on the DTOs to enforce the lengths of the credit card number.
+
+I've used CoPilot in Visual Studio as an AI assistant.

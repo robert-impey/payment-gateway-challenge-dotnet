@@ -25,5 +25,5 @@ public record PostPaymentResponse
     public required string Currency { get; init; }
 
     [Required]
-    public required int Amount { get; init; }
+    public required  int Amount { get; init; }
 }
