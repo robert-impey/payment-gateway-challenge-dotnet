@@ -1,0 +1,328 @@
+{
+  "info": {
+    "_postman_id": "f8ed6ee7-9172-4c18-b2c1-12d7d209b07f",
+    "name": "Checkout",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46975836",
+    "_collection_link": "https://go.postman.co/collection/46975836-f8ed6ee7-9172-4c18-b2c1-12d7d209b07f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Simulator",
+      "item": [
+        {
+          "name": "Get All",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Missing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"card_number\": \"2222405343248877\",\r\n  \"expiry_date\": \"04/2025\",\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 100\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Successful",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"card_number\": \"2222405343248877\",\r\n  \"expiry_date\": \"04/2025\",\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 100,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - 503",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"card_number\": \"2222405343248870\",\r\n  \"expiry_date\": \"04/2025\",\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 100,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Declined",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"card_number\": \"2222405343248878\",\r\n  \"expiry_date\": \"04/2025\",\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 100,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/payments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get All",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:7092/api/Payments/",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get One",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:7092/api/Payments/0d379d28-66db-4f23-bbed-ed4456a8d6b6",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments",
+                "0d379d28-66db-4f23-bbed-ed4456a8d6b6"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Authorized",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"cardNumber\": \"1234567890123457\",\r\n  \"expiryMonth\": 10,\r\n  \"expiryYear\": 2028,\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 5000,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:7092/api/Payments",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Declined",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"cardNumber\": \"1234567890123458\",\r\n  \"expiryMonth\": 10,\r\n  \"expiryYear\": 2028,\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 5000,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:7092/api/Payments",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Rejected",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"cardNumber\": \"1234567890123451\",\r\n  \"expiryMonth\": 10,\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 5000,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:7092/api/Payments",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post - Missing",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"cardNumber\": \"1234567890123451\",\r\n  \"expiryMonth\": 10,\r\n  \"currency\": \"GBP\",\r\n  \"amount\": 5000,\r\n  \"cvv\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:7092/api/Payments",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "7092",
+              "path": [
+                "api",
+                "Payments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
