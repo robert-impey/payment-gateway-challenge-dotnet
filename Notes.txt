@@ -1,14 +1,17 @@
 My Approach
 
+I've used CoPilot Visual Studio and Junie in Rider as AI assistants.
+
 The payment request needs to validate the request from the merchant before
 calling the acquiring bank.
 
 The spec states that gateway will return "Rejected" if the request is malformed.
-I've used the framework's validation features, which ordinarily means that the controller
-would return "BadRequest" for malformed requests before the method is even invoked.
-In order to stick strictly to the spec, I could disabled the filtering in the Program.cs file in order
+The requirements of the challenge state "Your API design and architecture should be focused on meeting the functional requirements outlined above."
+I've used the framework's validation features in my DTOs, which ordinarily means that the controller
+would return "BadRequest" for malformed requests before the controller's post method is even invoked.
+In order to stick strictly to the spec, I have disabled the filtering in the Program.cs file in order
 to enter the controller's PostPayment method, validate manually and return the enum value.
-However, this not idiomatic and potentially error prone, so I've stuck to HTTP codes and deviated from the spec.
+However, this not idiomatic and potentially error prone, so recommend sticking to HTTP codes and deviating from the spec.
 In a real world scenario, I would discuss this requirement with the team to confirm current
 expectations from existing merchants.
 
@@ -21,6 +24,7 @@ must include the following fields ... Status	Must be one of the following values
 
 The acquiring bank may return 503 if the service is unavailable. In this case, for this phase, I will
 return "Rejected" to the merchant.
+Return a failure HTTP error code to the merchant at this point might be more idiomatic.
 In the future, we can implement retry logic to handle this case, perhaps using a library like Polly 
 to handle transient faults.
 
@@ -33,5 +37,3 @@ The gateway will return the acquiring bank's response to the merchant, including
     - the status of the transaction.
 
 I've used attributes on the DTOs to enforce the lengths of the credit card number.
-
-I've used CoPilot in Visual Studio as an AI assistant.

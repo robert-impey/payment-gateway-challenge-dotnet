@@ -7,7 +7,7 @@ namespace PaymentGateway.Api.Models;
 /// However, the expiry month and year need to be validated together,
 /// so I have created this class to handle that logic.
 /// </summary>
-public class PaymentValidator
+public class PaymentsValidator
 {
     protected virtual DateTimeOffset Now => DateTimeOffset.UtcNow;
 

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
+using PaymentGateway.Api.Models;
+using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
 
@@ -7,19 +9,46 @@ namespace PaymentGateway.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PaymentsController : Controller
+public class PaymentsController(
+    PaymentsRepository paymentsRepository,
+    AcquiringBankClient bankClient,
+    PaymentsValidator paymentsValidator
+    ) : Controller
 {
-    private readonly PaymentsRepository _paymentsRepository;
-
-    public PaymentsController(PaymentsRepository paymentsRepository)
+    [HttpPost]
+    public async Task<ActionResult<PostPaymentResponse>> PostPaymentAsync(PostPaymentRequest request, CancellationToken token)
     {
-        _paymentsRepository = paymentsRepository;
+        if (!paymentsValidator.Validate(request))
+        {
+            return BadRequest("Invalid payment request.");
+        }
+
+        try
+        {
+            var bankResponse = await bankClient.MakePayment(request, token);
+
+            if (bankResponse is null)
+            {
+                return BadRequest("Failed to process payment.");
+            }
+
+            if (bankResponse.Status != Enums.PaymentStatus.Rejected)
+            {
+                paymentsRepository.Add(bankResponse, token);
+            }
+
+            return new OkObjectResult(bankResponse);
+        }
+        catch (Exception)
+        {
+            return BadRequest("Failed to process payment.");
+        }
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id)
+    public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id, CancellationToken token)
     {
-        var payment = await _paymentsRepository.Get(id);
+        var payment = await paymentsRepository.Get(id, token);
 
         // If the payment is not found, return a 404 (Not Found)
         if (payment is null)

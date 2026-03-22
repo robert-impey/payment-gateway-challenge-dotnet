@@ -6,9 +6,9 @@ using Shouldly;
 
 namespace PaymentGateway.Api.Tests;
 
-public class PaymentValidatorTests
+public class PaymentsValidatorTests
 {
-    private class TestPaymentValidator(DateTimeOffset now) : PaymentValidator
+    private class TestPaymentsValidator(DateTimeOffset now) : PaymentsValidator
     {
         protected override DateTimeOffset Now => now;
     }
@@ -22,7 +22,7 @@ public class PaymentValidatorTests
     {
         // Arrange
         var now = new DateTimeOffset(nowYear, nowMonth, 22, 0, 0, 0, TimeSpan.Zero);
-        var validator = new TestPaymentValidator(now);
+        var validator = new TestPaymentsValidator(now);
         var request = new Models.Requests.PostPaymentRequest
         {
             CardNumber = "01234567890123",

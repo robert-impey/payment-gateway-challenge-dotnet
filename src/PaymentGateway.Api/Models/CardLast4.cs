@@ -22,4 +22,9 @@ public record CardLast4
 
         _value = value;
     }
+
+    public static implicit operator CardLast4(string v)
+    {
+        throw new NotImplementedException();
+    }
 }
