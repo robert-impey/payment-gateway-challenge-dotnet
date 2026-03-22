@@ -67,6 +67,13 @@ public class PaymentsController(
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id, CancellationToken token)
     {
+        // Note that we have disabled filtering for the controllers,
+        // so we need to check the model state here.
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Invalid payment ID.");
+        }
+
         var payment = await paymentsRepository.Get(id, token);
 
         // If the payment is not found, return a 404 (Not Found)
