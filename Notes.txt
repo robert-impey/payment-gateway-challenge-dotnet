@@ -11,7 +11,7 @@ I've used the framework's validation features in my DTOs, which ordinarily means
 would return "BadRequest" for malformed requests before the controller's post method is even invoked.
 In order to stick strictly to the spec, I have disabled the filtering in the Program.cs file in order
 to enter the controller's PostPayment method, validate manually and return the enum value.
-However, this not idiomatic and potentially error prone, so recommend sticking to HTTP codes and deviating from the spec.
+However, this not idiomatic and potentially error prone, so I recommend sticking to HTTP codes and deviating from the spec.
 In a real world scenario, I would discuss this requirement with the team to confirm current
 expectations from existing merchants.
 
