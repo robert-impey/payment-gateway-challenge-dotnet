@@ -39,6 +39,7 @@ public class PaymentsController(
 
         if (!paymentsValidator.Validate(request))
         {
+            // Rejected not bad request.
             return BadRequest("Invalid payment request.");
         }
 
